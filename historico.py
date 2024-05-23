@@ -1,0 +1,128 @@
+import pymupdf
+import json
+import sys
+
+# Coleção de funções com o objetivo de ler, formatar e salvar históricos escolares da USP,
+# gerados pelo jupiterweb no formato .pdf e salvo em .json
+
+def processa( nome_arquivo: str ) -> dict:
+    doc = pymupdf.open( nome_arquivo )
+    linhas = []
+    for page in doc[1:]:
+        for table in page.find_tables():
+            for line in table.extract():
+                linhas.append(line)
+
+    historico = {
+        'aluno':        linhas[3][1],
+        'unidade':      linhas[2][1],
+        'curso':        linhas[4][0].split('\n')[1].split(": ")[1],
+        'ingresso':     linhas[4][0].split(": ")[1].split('\n')[0],
+        'reingressos':  int(linhas[5][0].split(": ")[1]),
+        'materias':     __filtra_materias(linhas)
+    }
+    return historico
+
+
+def salva( historico: dict, nome_arquivo: str ):
+    with open( nome_arquivo, 'w' ) as arquivo:
+        json.dump( historico, arquivo, indent = 4 )
+
+
+def carrega( nome_arquivo: str ):
+    # Lê o histórico escolar salvo em JSON, no formato da função processa()
+    with open( nome_arquivo, 'r' ) as file:
+        dados = json.load( file )
+
+    return dados
+
+
+def __filtra_materias( linhas: list ):
+    materias = []
+    # Começa a filtragem a partir da 11ª linha, pois as anteriores são irrelevantes
+    i = 11
+    while ( not __eh_o_final(linhas[i]) ):
+        # Deixar mais claro os índices (-1, por exemplo)
+        if __eh_materia(linhas[i]):
+            materias.append( __dicionariza(linhas[i]) )
+        i += 1
+
+    return materias
+
+
+def __dicionariza( linha: list ):
+    # Formata os dados do histórico para o formato de dicionário 
+    # (tabela de símbolos)
+    return {
+        'sigla':    linha[0],
+        'au':       __intfy(linha[5]),
+        'tr':       __intfy(linha[6]),
+        'ch':       __intfy(linha[7]),
+        'ce':       __intfy(linha[8]),
+        'cp':       __intfy(linha[9]),
+        'ext':      __intfy(linha[10]),
+        'atpa':     __intfy(linha[11]),
+        'freq':     __intfy(linha[12]),
+        'nota':     __floatfy(linha[13]),
+        'status':   __get_status(linha[13])
+    }
+
+
+def __eh_materia( linha: list ):
+    # Verifica se a linha contém as informações de uma matéria
+    # O último elemento da linha precisa ser uma nota ou o status da matéria
+    return (linha[-1] != None) and ( ('A' <= linha[-1][-1] <= 'Z') or  ('0' <= linha[-1][-1] <= '9') )
+
+
+def __eh_o_final( linha: list ):
+    # Verifica se a linha é o final das tabelas de matéria, tem uma frase que
+    # contém a palavra 'pretendidos' e é a última linha da tabela
+    return ( "pretendidos" in linha[0] )
+
+
+def __intfy( x: str ):
+    # Converte uma string para um número, se possível
+    # Exemplo:
+    # "5.7 A" -> 5.7 (float)
+    # ""      -> None
+    # "MA"    -> None
+    x = x.split()
+    try:
+        return int( x[0] )
+    except:
+        return None
+    
+
+def __floatfy( x: str ):
+    # Converte uma string para um número, se possível
+    # Exemplo:
+    # "5.7 A" -> 5.7 (float)
+    # ""      -> None
+    # "MA"    -> None
+    x = x.split()
+    try:
+        return float( x[0] )
+    except:
+        return None
+    
+
+def __get_status( x: str ):
+    # Retorna o status da matéria
+    # Exemplo:
+    # "5.2 A" -> "A"
+    # "MA"    -> "MA"
+    x = x.split()
+    return x[-1]
+
+
+def main():
+    if ( len(sys.argv) < 2 ):
+        print("O nome do arquivo do histórico escolar é necessário")
+        sys.exit()
+
+    historico = processa(sys.argv[1])
+    salva( historico, sys.argv[1].split('.')[0] + ".json" )
+
+
+if __name__ == "__main__":
+    main()
