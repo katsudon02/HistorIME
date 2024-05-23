@@ -1,7 +1,7 @@
 # HistorIME - O processador de históricos e verificador de trilhas
 
 ## Descrição
-Este projeto é a versão em python do verificador de trilhas desenvolvido por @Renatata-H, com
+Este projeto é a versão em python do [verificador de trilhas](https://github.com/Renatata-H/checagem_de_trilha_BCC_IME_USP) desenvolvido por @Renatata-H, com
 a separação do processo em duas partes e a adição de algumas funções. O projeto é composto por 
 dois principais componentes:
 * Processador de históricos escolares;
@@ -39,8 +39,8 @@ matérias cursadas até o momento.
 *** PENDENTE ***
 
 ## Dependências
-Python, versão 3.12.3 ou superior
-PyMuPDF, versão 1.24.4 ou superior
+- Python, versão 3.12.3 ou superior
+- PyMuPDF, versão 1.24.4 ou superior
 
 ## Informações adicionais
 Segue as informações da máquina onde o projeto foi desenvolvido e testado:
