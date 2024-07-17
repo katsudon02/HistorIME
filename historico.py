@@ -6,12 +6,23 @@ import sys
 # gerados pelo jupiterweb no formato .pdf e salvo em .json
 
 def processa( nome_arquivo: str ) -> dict:
+    """
+    Esta função recebe o nome do arquivo do histórico e retorna um dicionário com as informações relevantes extraídas do pdf
+ 
+    Parâmetros:
+    nome_arquivo (str): O nome do arquivo do histórico escolar. O nome precisa ser um caminho válido até o arquivo.
+ 
+    Retorna:
+    dict: Informações relevantes contidas no histórico escolar
+    """
+
+    # Coleção das linhas tas tabelas do histórico
     doc = pymupdf.open( nome_arquivo )
     linhas = []
-    for page in doc[1:]:
-        for table in page.find_tables():
-            for line in table.extract():
-                linhas.append(line)
+    for pagina in doc[1:]:
+        for tabela in pagina.find_tables():
+            for linha in tabela.extract():
+                linhas.append(linha)
 
     historico = {
         'aluno':        linhas[3][1],
@@ -25,34 +36,49 @@ def processa( nome_arquivo: str ) -> dict:
 
 
 def salva( historico: dict, nome_arquivo: str ):
+    """
+    Recebe um histórico escolar processado por processa() e o nome do arquivo de destino, e salva o dicionário em formato JSON.
+ 
+    Parâmetros:
+    historico (dict): Um dicionário gerado por processa(), que contém as informações do histórico.
+    nome_arquivo (str): O nome do arquivo onde os dados serão salvos. O nome precisa ser um caminho válido.
+    """
+
     with open( nome_arquivo, 'w' ) as arquivo:
-        json.dump( historico, arquivo, indent = 4 )
+        json.dump( historico, arquivo, indent = 4, ensure_ascii = False )
 
 
-def carrega( nome_arquivo: str ):
-    # Lê o histórico escolar salvo em JSON, no formato da função processa()
+def carrega( nome_arquivo: str ) -> dict:
+    """
+    Recebe o nome de um arquivo JSON, gerado pela função salva(), e devolve os dados convertidos em um dicionário.
+ 
+    Parâmetros:
+    nome_arquivo (str): O nome do arquivo JSON, criado pela função salva().
+ 
+    Retorna:
+    dict: Dicionário contendo as informações do histórico processado.
+    """
+
     with open( nome_arquivo, 'r' ) as file:
         dados = json.load( file )
 
     return dados
 
-
+# Seleciona as linhas de uma lista que satisfazem as condições para serem 
+# matérias e retorna o resultado
 def __filtra_materias( linhas: list ):
     materias = []
     # Começa a filtragem a partir da 11ª linha, pois as anteriores são irrelevantes
     i = 11
     while ( not __eh_o_final(linhas[i]) ):
-        # Deixar mais claro os índices (-1, por exemplo)
         if __eh_materia(linhas[i]):
             materias.append( __dicionariza(linhas[i]) )
         i += 1
 
     return materias
 
-
+# Formata as linhas contidas em uma lista na forma de dicionário
 def __dicionariza( linha: list ):
-    # Formata os dados do histórico para o formato de dicionário 
-    # (tabela de símbolos)
     return {
         'sigla':    linha[0],
         'au':       __intfy(linha[5]),
@@ -68,49 +94,46 @@ def __dicionariza( linha: list ):
     }
 
 
+# Verifica se a linha contém as informações de uma matéria
+# O último elemento da linha precisa ser uma nota ou o status da matéria
 def __eh_materia( linha: list ):
-    # Verifica se a linha contém as informações de uma matéria
-    # O último elemento da linha precisa ser uma nota ou o status da matéria
     return (linha[-1] != None) and ( ('A' <= linha[-1][-1] <= 'Z') or  ('0' <= linha[-1][-1] <= '9') )
 
 
+# Verifica se a linha é o final das tabelas de matéria, tem uma frase que
+# contém a palavra 'pretendidos' e é a última linha da tabela
 def __eh_o_final( linha: list ):
-    # Verifica se a linha é o final das tabelas de matéria, tem uma frase que
-    # contém a palavra 'pretendidos' e é a última linha da tabela
     return ( "pretendidos" in linha[0] )
 
-
+# Converte uma string para um número, se possível
+# Exemplo:
+# "5.7 A" -> 5.7 (float)
+# ""      -> None
+# "MA"    -> None
 def __intfy( x: str ):
-    # Converte uma string para um número, se possível
-    # Exemplo:
-    # "5.7 A" -> 5.7 (float)
-    # ""      -> None
-    # "MA"    -> None
     x = x.split()
     try:
         return int( x[0] )
     except:
         return None
     
-
+# Converte uma string para um número, se possível
+# Exemplo:
+# "5.7 A" -> 5.7 (float)
+# ""      -> None
+# "MA"    -> None
 def __floatfy( x: str ):
-    # Converte uma string para um número, se possível
-    # Exemplo:
-    # "5.7 A" -> 5.7 (float)
-    # ""      -> None
-    # "MA"    -> None
     x = x.split()
     try:
         return float( x[0] )
     except:
         return None
     
-
+# Retorna o status da matéria
+# Exemplo:
+# "5.2 A" -> "A"
+# "MA"    -> "MA"
 def __get_status( x: str ):
-    # Retorna o status da matéria
-    # Exemplo:
-    # "5.2 A" -> "A"
-    # "MA"    -> "MA"
     x = x.split()
     return x[-1]
 
@@ -122,6 +145,7 @@ def main():
 
     historico = processa(sys.argv[1])
     salva( historico, sys.argv[1].split('.')[0] + ".json" )
+    print(type(carrega(sys.argv[1][:-3] + "json")))
 
 
 if __name__ == "__main__":
