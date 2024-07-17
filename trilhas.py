@@ -1,3 +1,5 @@
+import sys
+
 from historico import carrega
 
 # Algumas variáveis auxiliares para formatação das cores do texto
@@ -191,7 +193,7 @@ def main():
     # for key in info["trilhas"].keys():
     #     total[key] = [ 0 ] * len( info["trilhas"][key]["minimo"] )
 
-    historico = carrega("historico.json")
+    historico = carrega( sys.argv[1] )
     print(f"{AMARELO}NUSP - Aluno{RESET}: {historico["aluno"]}")
     print("------ Teoria da Computação ------")
     teoria( historico, "trilhas/teoria.json" )
