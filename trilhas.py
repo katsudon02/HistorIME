@@ -36,7 +36,7 @@ def teoria( historico: dict, caminho: str ):
     disciplinas = carrega(caminho)
 
     # Obrigatórias
-    completas = [ 0, 0, 0 ]
+    completas = [ 0, 0, 0, 0 ]
     obrigatorias = matches( disciplinas["obrigatorias"].keys(), historico )
     for materia in obrigatorias:
         completas[ disciplinas["obrigatorias"][materia] ] += 1
@@ -53,14 +53,6 @@ def teoria( historico: dict, caminho: str ):
     
     # Optativas
     optativas = matches( disciplinas["optativas"].keys(), historico )
-    # IMPORTANTE
-    # Algumas matérias obrigatórias aparecem como optativas em outros módulos, precisa remover a repetição
-    for obr in obrigatorias:
-        try:
-            optativas.remove(obr)
-        except:
-            continue
-    # Continua a contagem
     for materia in optativas:
         completas[ disciplinas["optativas"][materia] ] += 1
 
